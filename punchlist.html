@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Punchlist — Home Renovation 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  button { all: unset; cursor: pointer; }
+  :root {
+    --glow-blue: #4fc3f7; --glow-teal: #26d4aa; --glow-amber: #f0a500;
+    --glow-purple: #a78bfa; --glow-rose: #f06595;
+    --border: rgba(255,255,255,0.07); --border-bright: rgba(255,255,255,0.14);
+    --text-secondary: #8892a4; --text-muted: #4a5568;
+  }
+  body {
+    background: #080e18;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .app {
+    background: linear-gradient(160deg, #0e1520 0%, #0a1018 50%, #0d1520 100%);
+    width: 100%;
+    max-width: 720px;
+    padding: 0 0 60px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Space Mono', monospace;
+    color: #e8eaf0;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .app::before {
+    content: ''; position: absolute; top: -80px; left: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(79,195,247,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header { padding: 36px 36px 24px; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-size: 9px; letter-spacing: 0.2em; color: var(--glow-teal); text-transform: uppercase; margin-bottom: 8px; opacity: 0.8; }
+  .title { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 700; color: #fff; line-height: 1.1; }
+  .title em { font-style: italic; color: var(--glow-blue); }
+  .summary-row { display: flex; gap: 28px; margin-top: 20px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .stat-val.warn { color: var(--glow-amber); }
+  .stat-val.good { color: var(--glow-teal); }
+  .stat-label { font-size: 9px; letter-spacing: 0.12em; color: var(--text-secondary); text-transform: uppercase; }
+  .progress-wrap { margin-top: 18px; display: flex; align-items: center; gap: 12px; }
+  .progress-bar { flex: 1; height: 3px; background: var(--border-bright); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--glow-teal), var(--glow-blue)); transition: width 0.5s ease; }
+  .progress-label { font-size: 10px; color: var(--text-secondary); white-space: nowrap; }
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 36px; border-bottom: 1px solid var(--border); gap: 12px;
+  }
+  .filters { display: flex; gap: 8px; }
+  .pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid rgba(38, 212, 170, 0.2);
+    color: rgba(38, 212, 170, 0.4);
+    white-space: nowrap;
+    transition: border-color 0.18s, color 0.18s, box-shadow 0.18s;
+    cursor: pointer;
+  }
+  .pill:hover {
+    border-color: rgba(38, 212, 170, 0.5);
+    color: rgba(38, 212, 170, 0.7);
+  }
+  .pill.active {
+    border-color: #26d4aa;
+    color: #26d4aa;
+    box-shadow: 0 0 10px rgba(38, 212, 170, 0.18);
+  }
+  .content { padding: 8px 0; }
+  .category { margin-bottom: 2px; }
+  .cat-header-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 36px 6px; cursor: pointer; user-select: none; transition: background 0.15s;
+  }
+  .cat-drag-handle {
+    color: var(--text-muted); cursor: grab; font-size: 10px;
+    opacity: 0; transition: opacity 0.15s; flex-shrink: 0; user-select: none;
+  }
+  .cat-header-row:hover .cat-drag-handle { opacity: 1; }
+  .cat-dragging { opacity: 0.4; }
+  .cat-drag-over { background: rgba(79,195,247,0.04); border-top: 1px solid rgba(79,195,247,0.25); }
+  .cat-header-row:hover { background: rgba(255,255,255,0.02); }
+  .cat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .cat-title-cluster { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  .cat-name-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #c8d0dc; }
+  .cat-count { font-size: 9px; color: var(--text-muted); letter-spacing: 0.06em; }
+  .cat-chevron { font-size: 9px; color: var(--text-muted); transition: transform 0.2s; display: inline-block; flex-shrink: 0; }
+  .cat-chevron.open { transform: rotate(90deg); }
+  .micro {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.08em; text-transform: lowercase;
+    color: var(--text-muted); opacity: 0; transition: color 0.15s, opacity 0.15s;
+    white-space: nowrap; cursor: pointer; flex-shrink: 0;
+  }
+  .micro.visible { opacity: 0.5; }
+  .micro.lit { opacity: 0.5; color: rgba(79,195,247,0.6); }
+  .cat-header-row:hover .micro,
+  .task-item:hover .micro { opacity: 0.6; }
+  .micro:hover { color: var(--text-secondary) !important; opacity: 1 !important; }
+  .micro.danger:hover { color: var(--glow-rose) !important; opacity: 1 !important; }
+  .cat-add { opacity: 0; transition: color 0.15s, opacity 0.15s; }
+  .cat-header-row:hover .cat-add { opacity: 0.6; }
+  .cat-add:hover { color: rgba(79,195,247,0.8) !important; opacity: 1 !important; }
+  .task-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 36px 5px 52px; transition: background 0.15s; position: relative;
+  }
+  .task-item.drag-over { background: rgba(79,195,247,0.06); border-top: 1px solid rgba(79,195,247,0.3); }
+  .task-item.dragging { opacity: 0.4; }
+  .drag-handle {
+    color: var(--text-muted); cursor: grab; font-size: 10px; padding-top: 3px;
+    opacity: 0; transition: opacity 0.15s; flex-shrink: 0; user-select: none;
+  }
+  .task-item:hover .drag-handle { opacity: 1; }
+  .task-check {
+    width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--border-bright);
+    flex-shrink: 0; margin-top: 3px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .task-item.done .task-check { background: var(--glow-teal); border-color: var(--glow-teal); }
+  .task-item.done .task-check::after {
+    content: ''; width: 6px; height: 4px;
+    border-left: 1.5px solid #0a1018; border-bottom: 1.5px solid #0a1018;
+    transform: rotate(-45deg) translateY(-1px); display: block;
+  }
+  .task-body { flex: 1; min-width: 0; }
+  .task-title-row { display: flex; align-items: baseline; gap: 10px; }
+  .task-name {
+    font-family: 'Playfair Display', serif; font-size: 13px; font-weight: 400; font-style: italic; color: #e8eaf0;
+    line-height: 1.35; cursor: pointer;
+  }
+  .task-item.done .task-name { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--text-muted); }
+  .task-remove { margin-left: auto; }
+  .task-notes-area { margin-top: 8px; display: none; }
+  .task-notes-area.open { display: block; }
+  .task-notes-input {
+    width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border-bright);
+    border-radius: 6px; padding: 8px 10px; font-family: 'Space Mono', monospace;
+    font-size: 10px; color: #c8d0dc; resize: none; outline: none; line-height: 1.6;
+    transition: border-color 0.2s; min-height: 60px;
+  }
+  .task-notes-input:focus { border-color: rgba(79,195,247,0.4); }
+  .task-notes-input::placeholder { color: var(--text-muted); }
+  .add-trigger {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; opacity: 0; transition: opacity 0.2s;
+  }
+  .add-trigger:hover .trigger-icon { border-color: rgba(79,195,247,0.5); box-shadow: 0 0 6px rgba(79,195,247,0.2); }
+  .add-trigger:hover .trigger-label { color: rgba(79,195,247,0.7); }
+  .trigger-icon {
+    width: 14px; height: 14px; border-radius: 3px;
+    border: 1px dashed var(--text-muted);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .trigger-icon span { color: var(--text-muted); font-size: 12px; line-height: 1; margin-top: -1px; transition: color 0.2s; }
+  .add-trigger:hover .trigger-icon span { color: rgba(79,195,247,0.7); }
+  .trigger-label { font-size: 9px; letter-spacing: 0.08em; text-transform: lowercase; color: var(--text-muted); transition: color 0.2s; }
+  .add-cat-trigger { padding: 10px 36px; opacity: 0.35; }
+  .add-cat-trigger:hover { opacity: 1; }
+  .add-task-form { display: none; align-items: center; gap: 10px; padding: 4px 36px 8px 52px; }
+  .add-task-form.open { display: flex; }
+  .add-cat-form { display: none; align-items: center; gap: 10px; padding: 10px 36px; }
+  .add-cat-form.open { display: flex; }
+  .add-task-input {
+    flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(79,195,247,0.3);
+    font-family: 'Playfair Display', serif; font-size: 14px; color: #e8eaf0;
+    padding: 4px 0; outline: none;
+  }
+  .add-task-input::placeholder { color: var(--text-muted); font-style: italic; }
+  .add-cat-input {
+    flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(38,212,170,0.3);
+    font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #c8d0dc; padding: 4px 0; outline: none;
+  }
+  .add-cat-input::placeholder { text-transform: none; letter-spacing: 0; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+  .divider { height: 1px; background: var(--border); margin: 4px 36px; opacity: 0.5; }
+  .footer {
+    padding: 24px 36px 0; display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border); margin-top: 20px;
+  }
+  .footer-note { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .behind-badge {
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--glow-amber); border: 1px solid rgba(240,165,0,0.25);
+    background: rgba(240,165,0,0.06); padding: 4px 10px; border-radius: 10px;
+  }
+  .trash-section {
+    margin: 0 36px 0; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 20px;
+  }
+  .trash-header {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    user-select: none; padding-bottom: 10px;
+  }
+  .trash-title {
+    font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted);
+    flex: 1;
+  }
+  .trash-count {
+    font-size: 9px; color: var(--text-muted);
+  }
+  .trash-chevron {
+    font-size: 9px; color: var(--text-muted); transition: transform 0.2s; display: inline-block;
+  }
+  .trash-chevron.open { transform: rotate(90deg); }
+  .trash-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 5px 0; border-bottom: 1px solid var(--border);
+  }
+  .trash-item:last-child { border-bottom: none; }
+  .trash-item-label {
+    flex: 1; font-size: 11px; color: var(--text-muted);
+  }
+  .trash-item-label em { font-family: 'Playfair Display', serif; font-style: italic; }
+  .trash-item-type {
+    font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); opacity: 0.5; flex-shrink: 0;
+  }
+  .trash-restore {
+    font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em;
+    text-transform: lowercase; color: var(--text-muted); cursor: pointer;
+    transition: color 0.15s; flex-shrink: 0;
+  }
+  .trash-restore:hover { color: var(--glow-teal); }
+  .trash-empty {
+    font-size: 10px; color: var(--text-muted); padding: 8px 0; opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="eyebrow">Home Renovation · 2026</div>
+    <div class="title"><em>Punch</em>list</div>
+    <div class="summary-row">
+      <div class="stat"><div class="stat-val good" id="done-count">9</div><div class="stat-label">Done</div></div>
+      <div class="stat"><div class="stat-val" id="todo-count">16</div><div class="stat-label">Remaining</div></div>
+      <div class="stat"><div class="stat-val warn">Jul 18</div><div class="stat-label">Est. Finish</div></div>
+      <div class="stat"><div class="stat-val warn">+12d</div><div class="stat-label">Behind</div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:36%"></div></div>
+      <div class="progress-label" id="progress-label">9 / 25 tasks</div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="filters">
+      <button class="pill active" onclick="setFilter('all',this)">All</button>
+      <button class="pill" onclick="setFilter('todo',this)">To Do</button>
+      <button class="pill" onclick="setFilter('done',this)">Done</button>
+    </div>
+    <button class="pill" id="expand-btn" onclick="toggleAll()">expand all</button>
+  </div>
+  <div class="content" id="task-content"></div>
+  <div class="footer">
+    <div class="footer-note">Started Jan 12 · Planned Jul 6</div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span id="file-indicator" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;color:var(--text-muted);cursor:pointer;transition:color 0.15s;">○ link backup file</span>
+      <div class="behind-badge">1w 5d behind</div>
+    </div>
+  </div>
+  <div class="trash-section">
+    <div class="trash-header" onclick="toggleTrash()">
+      <div class="trash-title">trash</div>
+      <div class="trash-count" id="trash-count">0 items</div>
+      <div class="trash-chevron" id="trash-chevron">&#9658;</div>
+    </div>
+    <div id="trash-list" style="display:none;"></div>
+  </div>
+</div>
+<script>
+const CAT_COLORS = {
+  'Holdovers':'#4fc3f7','Electrical':'#f0a500','Plumbing':'#4fc3f7',
+  'HVAC':'#6ee7b7','Walls':'#a78bfa','Ceiling':'#f06595',
+  'Doors & Storage':'#f0a500','Finishing':'#26d4aa','Someday':'#8892a4'
+};
+const COLOR_POOL = ['#4fc3f7','#26d4aa','#f0a500','#a78bfa','#f06595','#6ee7b7','#f97316','#38bdf8'];
+const DEFAULT_TASKS = [
+  {id:1,cat:'Holdovers',name:'Protect floors',done:true,note:''},
+  {id:2,cat:'Holdovers',name:'Install backroom step / flooring',done:true,note:''},
+  {id:3,cat:'Electrical',name:'Repair leak behind breaker box, mount junction box',done:true,note:''},
+  {id:4,cat:'Electrical',name:'Work with Roberto on overall electrical plan',done:true,note:''},
+  {id:5,cat:'Electrical',name:'Run kitchen outlets (behind counter ×5)',done:true,note:''},
+  {id:6,cat:'Electrical',name:'Run overhead lights w/ switches & south wall outlets',done:true,note:''},
+  {id:7,cat:'Electrical',name:'Prep 2 exposed electrical conduit & hanging boxes',done:true,note:''},
+  {id:8,cat:'Electrical',name:'Wire and label breaker box',done:true,note:''},
+  {id:9,cat:'Plumbing',name:'Run drain line to sink (fix shower drain lines)',done:false,note:''},
+  {id:10,cat:'Plumbing',name:'Run water lines to sink / garborator',done:true,note:''},
+  {id:11,cat:'HVAC',name:'Install bathroom & kitchen vent pipes',done:false,note:''},
+  {id:12,cat:'HVAC',name:'Install kitchen fan (plan for upper shelving)',done:false,note:''},
+  {id:13,cat:'Walls',name:'Hang drywall',done:false,note:''},
+  {id:14,cat:'Walls',name:'Tape, putty and sand drywall',done:false,note:''},
+  {id:15,cat:'Walls',name:'Paint',done:false,note:''},
+  {id:16,cat:'Ceiling',name:'Stain panels',done:false,note:''},
+  {id:17,cat:'Doors & Storage',name:'Practice with stains and edging solutions',done:false,note:''},
+  {id:18,cat:'Doors & Storage',name:'Build bathroom door & install',done:false,note:'Buy glass and trims'},
+  {id:19,cat:'Doors & Storage',name:'Build kitchen door & install',done:false,note:'Buy glass and trims'},
+  {id:20,cat:'Doors & Storage',name:'Build dining room storage wall / window (TBD)',done:false,note:''},
+  {id:21,cat:'Doors & Storage',name:'Build kitchen shelves',done:false,note:''},
+  {id:22,cat:'Doors & Storage',name:'Finish all door jams / trim and backroom drywall',done:false,note:''},
+  {id:23,cat:'Finishing',name:'Drywall repairs and baseboards',done:false,note:''},
+  {id:24,cat:'Finishing',name:'Painting',done:false,note:''},
+  {id:25,cat:'Finishing',name:'Prep and install switch and outlet plates',done:false,note:''},
+  {id:26,cat:'Someday',name:'Cellar / hallway doors?',done:false,note:'',someday:true},
+  {id:27,cat:'Someday',name:'Glass in front door?',done:false,note:'',someday:true},
+];
+
+// ── Storage: localStorage (fallback) + File System Access API (primary) ──────
+
+const LS_KEY = 'punchlist_2026';
+
+function lsLoad() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && Array.isArray(p.TASKS) && p.TASKS.length > 0) return p;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function lsSave(data) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+// IndexedDB — stores the FileSystemFileHandle between sessions
+function openIDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('punchlist_fs', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('meta');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = reject;
+  });
+}
+async function idbGet(key) {
+  try {
+    const db = await openIDB();
+    return new Promise(resolve => {
+      const tx = db.transaction('meta', 'readonly');
+      const req = tx.objectStore('meta').get(key);
+      req.onsuccess = e => resolve(e.target.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch { return null; }
+}
+async function idbSet(key, val) {
+  try {
+    const db = await openIDB();
+    return new Promise(resolve => {
+      const tx = db.transaction('meta', 'readwrite');
+      tx.objectStore('meta').put(val, key);
+      tx.oncomplete = resolve;
+    });
+  } catch {}
+}
+
+let fileHandle = null;
+
+async function fsRead(handle) {
+  const file = await handle.getFile();
+  return JSON.parse(await file.text());
+}
+async function fsWrite(handle, data) {
+  const w = await handle.createWritable();
+  await w.write(JSON.stringify(data, null, 2));
+  await w.close();
+}
+
+// Try to reconnect to a previously linked file on page load
+async function fsInit() {
+  if (!window.showSaveFilePicker) return null;
+  const handle = await idbGet('fileHandle');
+  if (!handle) return null;
+  try {
+    let perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'prompt') perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { fileHandle = handle; return await fsRead(handle); }
+  } catch(e) {}
+  return null;
+}
+
+// Called when user clicks "link backup file"
+async function linkBackupFile() {
+  if (!window.showSaveFilePicker) {
+    alert('File linking requires Chrome or Edge. Try opening the app there!');
+    return;
+  }
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'punchlist-data.json',
+      types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+    });
+    await idbSet('fileHandle', handle);
+    fileHandle = handle;
+    await fsWrite(handle, stateSnapshot());
+    updateFileIndicator();
+  } catch(e) { if (e.name !== 'AbortError') console.error(e); }
+}
+
+function stateSnapshot() {
+  return { TASKS, TRASH, collapsed, nextId };
+}
+
+function saveState() {
+  const data = stateSnapshot();
+  lsSave(data);
+  if (fileHandle) fsWrite(fileHandle, data).catch(() => {});
+}
+
+function updateFileIndicator() {
+  const el = document.getElementById('file-indicator');
+  if (!el) return;
+  if (fileHandle) {
+    el.textContent = '● backed up to file';
+    el.style.color = 'var(--glow-teal)';
+    el.style.cursor = 'default';
+    el.onclick = null;
+  } else {
+    el.textContent = '○ link backup file';
+    el.style.color = 'var(--text-muted)';
+    el.style.cursor = 'pointer';
+    el.onclick = linkBackupFile;
+  }
+}
+
+// ── Boot: load from localStorage immediately, upgrade from file async ─────────
+
+const lsSaved = lsLoad();
+let TASKS = (lsSaved && lsSaved.TASKS) ? lsSaved.TASKS : DEFAULT_TASKS.map(t=>({...t}));
+let TRASH = lsSaved ? (lsSaved.TRASH || []) : [];
+let collapsed = lsSaved ? (lsSaved.collapsed || {}) : {};
+let nextId = lsSaved ? (lsSaved.nextId || 100) : 100;
+
+[...new Set(TASKS.map(t=>t.cat))].forEach(c => {
+  if (collapsed[c] === undefined) collapsed[c] = true;
+});
+
+let allExpanded = false;
+let currentFilter = 'all';
+let openNotes = {};
+let activeAddForm = null;
+let dragSrcId = null;
+function cats() { return [...new Set(TASKS.map(t=>t.cat))]; }
+function toggleAll() {
+  allExpanded = !allExpanded;
+  cats().forEach(c => collapsed[c] = !allExpanded);
+  document.getElementById('expand-btn').textContent = allExpanded ? 'collapse all' : 'expand all';
+  render();
+}
+function toggleCat(cat) {
+  collapsed[cat] = !collapsed[cat];
+  allExpanded = cats().every(c => !collapsed[c]);
+  document.getElementById('expand-btn').textContent = allExpanded ? 'collapse all' : 'expand all';
+  render();
+}
+function toggleTask(id) {
+  const t = TASKS.find(t=>t.id===id);
+  if(t) { t.done = !t.done; render(); updateStats(); saveState(); }
+}
+function toggleNote(id) { openNotes[id] = !openNotes[id]; render(); }
+function updateNote(id, val) { const t = TASKS.find(t=>t.id===id); if(t) { t.note = val; saveState(); } }
+let trashOpen = false;
+function toggleTrash() {
+  trashOpen = !trashOpen;
+  document.getElementById('trash-list').style.display = trashOpen ? 'block' : 'none';
+  document.getElementById('trash-chevron').classList.toggle('open', trashOpen);
+  renderTrash();
+}
+function deleteTask(id) {
+  const t = TASKS.find(t=>t.id===id);
+  if(t) TRASH.unshift({type:'task', data:{...t}, deletedAt: Date.now()});
+  TASKS = TASKS.filter(t=>t.id!==id);
+  render(); updateStats(); renderTrash(); saveState();
+}
+function deleteCategory(cat) {
+  const catTasks = TASKS.filter(t=>t.cat===cat);
+  TRASH.unshift({type:'category', data:{cat, tasks: catTasks.map(t=>({...t}))}, deletedAt: Date.now()});
+  TASKS = TASKS.filter(t=>t.cat!==cat);
+  delete collapsed[cat];
+  render(); updateStats(); renderTrash(); saveState();
+}
+function restoreItem(idx) {
+  const item = TRASH[idx];
+  if(!item) return;
+  if(item.type === 'task') {
+    TASKS.push(item.data);
+  } else {
+    if(!CAT_COLORS[item.data.cat]) CAT_COLORS[item.data.cat] = COLOR_POOL[cats().length % COLOR_POOL.length];
+    collapsed[item.data.cat] = false;
+    item.data.tasks.forEach(t => { if(!TASKS.find(x=>x.id===t.id)) TASKS.push(t); });
+  }
+  TRASH.splice(idx, 1);
+  render(); updateStats(); renderTrash(); saveState();
+}
+function renderTrash() {
+  const count = TRASH.length;
+  const countEl = document.getElementById('trash-count');
+  if(countEl) countEl.textContent = count === 0 ? 'empty' : count + (count === 1 ? ' item' : ' items');
+  const el = document.getElementById('trash-list');
+  if(!el || !trashOpen) return;
+  if(count === 0) { el.innerHTML = '<div class="trash-empty">Nothing in the trash.</div>'; return; }
+  el.innerHTML = TRASH.map((item, i) => {
+    const label = item.type === 'task'
+      ? `<em>${item.data.name}</em>`
+      : `<span style="letter-spacing:0.1em;text-transform:uppercase;font-size:10px;">${item.data.cat}</span>&nbsp;<span style="opacity:0.4;font-size:9px;">(${item.data.tasks.length} task${item.data.tasks.length!==1?'s':''})</span>`;
+    return `<div class="trash-item">
+      <div class="trash-item-label">${label}</div>
+      <div class="trash-item-type">${item.type}</div>
+      <span class="trash-restore" onclick="restoreItem(${i})">↩ restore</span>
+    </div>`;
+  }).join('');
+}
+function openAddTask(cat) {
+  activeAddForm = cat; render();
+  setTimeout(()=>{ const el = document.getElementById('new-task-'+cat); if(el) el.focus(); },0);
+}
+function closeAddTask() { activeAddForm = null; render(); }
+function confirmAddTask(cat) {
+  const input = document.getElementById('new-task-'+cat);
+  const name = input && input.value.trim();
+  if(name) { TASKS.push({id:nextId++,cat,name,done:false,note:''}); updateStats(); saveState(); }
+  activeAddForm = null; render();
+}
+function openAddCat() {
+  activeAddForm = 'new-cat'; render();
+  setTimeout(()=>{ const el = document.getElementById('new-cat-input'); if(el) el.focus(); },0);
+}
+function closeAddCat() { activeAddForm = null; render(); }
+function confirmAddCat() {
+  const input = document.getElementById('new-cat-input');
+  const name = input && input.value.trim();
+  if(name && !cats().includes(name)) {
+    CAT_COLORS[name] = COLOR_POOL[cats().length % COLOR_POOL.length];
+    collapsed[name] = false;
+    TASKS.push({id:nextId++,cat:name,name:'New task',done:false,note:''});
+    updateStats(); saveState();
+  }
+  activeAddForm = null; render();
+}
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function updateStats() {
+  const nonSomeday = TASKS.filter(t=>!t.someday);
+  const done = nonSomeday.filter(t=>t.done).length;
+  const total = nonSomeday.length;
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('todo-count').textContent = total - done;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-label').textContent = done+' / '+total+' tasks';
+}
+let dragSrcCat = null;
+function onCatDragStart(e, cat) {
+  dragSrcCat = cat; e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+  setTimeout(()=>{ const el = document.querySelector('[data-cat="'+cat+'"]'); if(el) el.classList.add('cat-dragging'); },0);
+}
+function onCatDragEnd() {
+  document.querySelectorAll('.category').forEach(el=>el.classList.remove('cat-dragging','cat-drag-over'));
+  dragSrcCat = null;
+}
+function onCatDragOver(e, cat) {
+  e.preventDefault(); e.stopPropagation();
+  if(dragSrcCat === null || dragSrcCat === cat) return;
+  document.querySelectorAll('.category').forEach(el=>el.classList.remove('cat-drag-over'));
+  const el = document.querySelector('[data-cat="'+cat+'"]');
+  if(el) el.classList.add('cat-drag-over');
+}
+function onCatDrop(e, tgtCat) {
+  e.preventDefault(); e.stopPropagation();
+  if(!dragSrcCat || dragSrcCat === tgtCat) return;
+  const allCats = cats();
+  const srcIdx = allCats.indexOf(dragSrcCat);
+  const tgtIdx = allCats.indexOf(tgtCat);
+  if(srcIdx < 0 || tgtIdx < 0) return;
+  const srcTasks = TASKS.filter(t=>t.cat===dragSrcCat);
+  const rest = TASKS.filter(t=>t.cat!==dragSrcCat);
+  const insertBefore = rest.findIndex(t=>t.cat===tgtCat);
+  if(insertBefore < 0) { TASKS.splice(0, TASKS.length, ...rest, ...srcTasks); }
+  else {
+    const insertIdx = srcIdx > tgtIdx ? insertBefore : rest.lastIndexOf(rest.filter(t=>t.cat===tgtCat).at(-1)) + 1;
+    rest.splice(insertIdx, 0, ...srcTasks);
+    TASKS.splice(0, TASKS.length, ...rest);
+  }
+  dragSrcCat = null;
+  document.querySelectorAll('.category').forEach(el=>el.classList.remove('cat-dragging','cat-drag-over'));
+  render(); updateStats(); saveState();
+}
+function onDragStart(e,id) {
+  dragSrcId = id; e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{ const el = document.querySelector('[data-id="'+id+'"]'); if(el) el.classList.add('dragging'); },0);
+}
+function onDragEnd() {
+  document.querySelectorAll('.task-item').forEach(el=>el.classList.remove('dragging','drag-over'));
+}
+function onDragOver(e,id) {
+  e.preventDefault();
+  document.querySelectorAll('.task-item').forEach(el=>el.classList.remove('drag-over'));
+  const el = document.querySelector('[data-id="'+id+'"]');
+  if(el && id!==dragSrcId) el.classList.add('drag-over');
+}
+function onDrop(e,id) {
+  e.preventDefault();
+  if(dragSrcId===null||dragSrcId===id) return;
+  const srcIdx = TASKS.findIndex(t=>t.id===dragSrcId);
+  if(srcIdx<0) return;
+  const [src] = TASKS.splice(srcIdx,1);
+  const newTgt = TASKS.findIndex(t=>t.id===id);
+  if(newTgt<0) { TASKS.push(src); } else { src.cat = TASKS[newTgt]?.cat || src.cat; TASKS.splice(newTgt,0,src); }
+  dragSrcId = null;
+  document.querySelectorAll('.task-item').forEach(el=>el.classList.remove('drag-over'));
+  render(); updateStats(); saveState();
+}
+function render() {
+  const allCats = cats();
+  let html = '';
+  for(const cat of allCats) {
+    const tasks = TASKS.filter(t=>t.cat===cat);
+    const visible = tasks.filter(t => {
+      if(currentFilter==='done') return t.done;
+      if(currentFilter==='todo') return !t.done;
+      return true;
+    });
+    const color = CAT_COLORS[cat] || '#8892a4';
+    const doneCount = tasks.filter(t=>t.done).length;
+    const isOpen = !collapsed[cat];
+    const isAdding = activeAddForm === cat;
+    const safecat = cat.replace(/'/g,"\\'");
+    html += `<div class="category" data-cat="${cat}"
+      draggable="true"
+      ondragstart="onCatDragStart(event,'${safecat}')"
+      ondragend="onCatDragEnd()"
+      ondragover="onCatDragOver(event,'${safecat}')"
+      ondrop="onCatDrop(event,'${safecat}')">
+      <div class="cat-header-row" onclick="toggleCat('${safecat}')">
+        <div class="cat-drag-handle" onclick="event.stopPropagation()">⠿</div>
+        <div class="cat-dot" style="background:${color};box-shadow:0 0 6px ${color}66;"></div>
+        <div class="cat-title-cluster">
+          <div class="cat-name-label">${cat}</div>
+          <div class="cat-count">${doneCount}/${tasks.length}</div>
+          <div class="cat-chevron ${isOpen?'open':''}">&#9658;</div>
+          <span class="micro cat-add" onclick="event.stopPropagation();openAddTask('${safecat}')">+ task</span>
+        </div>
+        <span class="micro danger" onclick="event.stopPropagation();deleteCategory('${safecat}')">remove</span>
+      </div>`;
+    if(isOpen) {
+      if(isAdding) {
+        html += `<div class="add-task-form open" onclick="event.stopPropagation()">
+          <div class="trigger-icon"><span>+</span></div>
+          <input class="add-task-input" id="new-task-${cat}" placeholder="New task…"
+            onkeydown="if(event.key==='Enter')confirmAddTask('${safecat}');if(event.key==='Escape')closeAddTask()">
+          <span class="micro visible" onclick="closeAddTask()">cancel</span>
+        </div>`;
+      }
+      visible.forEach(t => {
+        const noteOpen = openNotes[t.id];
+        const hasNote = t.note && t.note.trim().length > 0;
+        html += `<div class="task-item ${t.done?'done':''}" data-id="${t.id}"
+          draggable="true"
+          ondragstart="onDragStart(event,${t.id})"
+          ondragend="onDragEnd()"
+          ondragover="onDragOver(event,${t.id})"
+          ondrop="onDrop(event,${t.id})">
+          <div class="drag-handle">⠿</div>
+          <div class="task-check" onclick="event.stopPropagation();toggleTask(${t.id})"></div>
+          <div class="task-body">
+            <div class="task-title-row">
+              <div class="task-name" onclick="event.stopPropagation();toggleNote(${t.id})">${t.name}</div>
+              <span class="micro ${hasNote?'lit':''}" onclick="event.stopPropagation();toggleNote(${t.id})">${noteOpen?'− note':'+ note'}</span>
+              <span class="micro danger task-remove" onclick="event.stopPropagation();deleteTask(${t.id})">remove</span>
+            </div>
+            <div class="task-notes-area ${noteOpen?'open':''}">
+              <textarea class="task-notes-input" placeholder="Add a note…"
+                oninput="updateNote(${t.id},this.value)"
+                onclick="event.stopPropagation()">${t.note}</textarea>
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div><div class="divider"></div>`;
+  }
+  if(activeAddForm === 'new-cat') {
+    html += `<div class="add-cat-form open">
+      <div class="trigger-icon"><span>+</span></div>
+      <input class="add-cat-input" id="new-cat-input" placeholder="Category name…"
+        onkeydown="if(event.key==='Enter')confirmAddCat();if(event.key==='Escape')closeAddCat()">
+      <span class="micro visible" onclick="closeAddCat()">cancel</span>
+    </div>`;
+  } else {
+    html += `<div class="add-trigger add-cat-trigger" onclick="openAddCat()">
+      <div class="trigger-icon"><span>+</span></div>
+      <div class="trigger-label">category</div>
+    </div>`;
+  }
+  document.getElementById('task-content').innerHTML = html;
+}
+render();
+updateStats();
+
+// Async: try to connect to previously linked file, reload data if found
+fsInit().then(fileData => {
+  if (fileData && Array.isArray(fileData.TASKS) && fileData.TASKS.length > 0) {
+    TASKS = fileData.TASKS;
+    TRASH = fileData.TRASH || [];
+    collapsed = fileData.collapsed || {};
+    nextId = fileData.nextId || 100;
+    [...new Set(TASKS.map(t=>t.cat))].forEach(c => {
+      if (collapsed[c] === undefined) collapsed[c] = true;
+    });
+    render();
+    updateStats();
+  }
+  updateFileIndicator();
+});
+</script>
+</body>
+</html>
